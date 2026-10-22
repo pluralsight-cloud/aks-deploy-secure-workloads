@@ -1,0 +1,41 @@
+name: globomantics-aks-secure
+metadata:
+  template: globomantics-aks-secure@1.0.0
+infra:
+  provider: bicep
+  path: infra
+  module: main.subscription
+
+hooks:
+  preprovision:
+    posix:
+      shell: sh
+      run: |
+        set -eu
+        az account set --subscription "$AZURE_SUBSCRIPTION_ID"
+        AZURE_PRINCIPAL_ID=$(az ad signed-in-user show --query id -o tsv)
+        test -n "$AZURE_PRINCIPAL_ID" || { echo "Could not resolve the setup user's Entra object ID." >&2; exit 1; }
+        azd env set AZURE_PRINCIPAL_ID "$AZURE_PRINCIPAL_ID"
+        azd env set REGISTRY_NAME "${REGISTRY_NAME:-acrglobomantics}"
+        azd env set KEY_VAULT_NAME "${KEY_VAULT_NAME:-kv-globomantics-orders}"
+        azd env set NODE_VM_SIZE "${NODE_VM_SIZE:-Standard_D4als_v6}"
+    windows:
+      shell: pwsh
+      run: |
+        $ErrorActionPreference = "Stop"
+        $PSNativeCommandUseErrorActionPreference = $true
+        az account set --subscription $env:AZURE_SUBSCRIPTION_ID
+        $principalId = az ad signed-in-user show --query id -o tsv
+        if (-not $principalId) { throw "Could not resolve the setup user's Entra object ID." }
+        azd env set AZURE_PRINCIPAL_ID $principalId
+        azd env set REGISTRY_NAME $(if ($env:REGISTRY_NAME) { $env:REGISTRY_NAME } else { "acrglobomantics" })
+        azd env set KEY_VAULT_NAME $(if ($env:KEY_VAULT_NAME) { $env:KEY_VAULT_NAME } else { "kv-globomantics-orders" })
+        azd env set NODE_VM_SIZE $(if ($env:NODE_VM_SIZE) { $env:NODE_VM_SIZE } else { "Standard_D4als_v6" })
+
+  postprovision:
+    posix:
+      shell: sh
+      run: scripts/postprovision.sh
+    windows:
+      shell: pwsh
+      run: scripts/postprovision.ps1

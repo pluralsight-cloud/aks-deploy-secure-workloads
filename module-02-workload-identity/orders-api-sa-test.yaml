@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: orders-api-sa-test
+  namespace: orders
+  labels:
+    azure.workload.identity/use: "true"
+spec:
+  serviceAccountName: orders-api-sa
+  restartPolicy: Never
+  containers:
+    - name: identity-test
+      image: ghcr.io/mhadaily/orders-identity-test:1.0.1
+      env:
+        - name: KEY_VAULT_NAME
+          value: kv-globomantics-orders
