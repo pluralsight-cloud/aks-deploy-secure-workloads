@@ -1,5 +1,7 @@
 # Deploy Secure Workloads on AKS — Sample Code
 
+>> Course URL: https://www.pluralsight.com/courses/aks-deploy-secure-workloads
+
 Use this repository to follow the course's commands in order. **Bash is the
 demonstrated shell**, using Azure CLI and `kubectl`. PowerShell equivalents
 are supplied for the core module exercise scripts; Module 2's preparation
